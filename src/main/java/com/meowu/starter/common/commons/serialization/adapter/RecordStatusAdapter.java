@@ -15,7 +15,7 @@ public class RecordStatusAdapter implements TypeAdapter<RecordStatus>{
 
     @Override
     public RecordStatus deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException{
-        return Objects.isNull(element) ? null : RecordStatus.getByCode(element.getAsString());
+        return Objects.isNull(element) ? null : RecordStatus.getByCode(element.getAsInt());
     }
 
     @Override

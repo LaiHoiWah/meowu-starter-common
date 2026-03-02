@@ -8,7 +8,7 @@ public class RSAUtilsTest{
 
     @Test
     public void keyPair(){
-        Map<String, String> keyMap = RSAUtils.generateKeyPair(RSAUtils.KEY_SIZE_4096);
+        Map<String, String> keyMap = RSAUtils.generateKeyPair(RSAUtils.KEY_SIZE_1024);
         System.out.println("PublicKey:\n" + keyMap.get(RSAUtils.PUBLIC_KEY));
         System.out.println("Private:\n" + keyMap.get(RSAUtils.PRIVATE_KEY));
     }

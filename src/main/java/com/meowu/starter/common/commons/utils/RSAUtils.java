@@ -5,6 +5,7 @@ import com.meowu.starter.common.commons.security.exception.RSAException;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -102,6 +103,14 @@ public class RSAUtils{
         return new String(decrypt(key, keySize, paddingMode, Base64.decodeBase64(base64Data)), StandardCharsets.UTF_8);
     }
 
+    public static String signatureToBase64String(PrivateKey key, String data){
+        return Base64.encodeBase64String(signature(key, data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    public static boolean verify(PublicKey key, String data, String signature){
+        return verify(key, data.getBytes(StandardCharsets.UTF_8), Base64.decodeBase64(signature));
+    }
+
     private static byte[] encrypt(Key key, int keySize, String paddingMode, byte[] data){
         AssertUtils.isNotNull(key, "RSAUtils: encrypt key must not be null");
         AssertUtils.isNotBlank(paddingMode, "RSAUtils: padding mode must not be null");
@@ -155,6 +164,53 @@ public class RSAUtils{
             }
             // result
             return stream.toByteArray();
+        }catch(Exception e){
+            throw new RSAException(e.getMessage(), e);
+        }
+    }
+
+    private static byte[] signature(PrivateKey key, byte[] data){
+        AssertUtils.isNotNull(key, "RSAUtils: private key must not be null");
+        AssertUtils.isNotEmpty(data, "RSAUtils: signature data must not be null");
+
+        try(ByteArrayInputStream inputStream = new ByteArrayInputStream(data)){
+            // signature
+            Signature signature = Signature.getInstance(ALGORITHM_SIGN);
+            signature.initSign(key);
+
+            // buffer
+            byte[] buffer    = new byte[8192];
+            int    bytesRead = -1;
+
+            while((bytesRead = inputStream.read(buffer)) != -1){
+                signature.update(buffer, 0, bytesRead);
+            }
+
+            return signature.sign();
+        }catch(Exception e){
+            throw new RSAException(e.getMessage(), e);
+        }
+    }
+
+    private static boolean verify(PublicKey key, byte[] data, byte[] signatureData){
+        AssertUtils.isNotNull(key, "RSAUtils: private key must not be null");
+        AssertUtils.isNotEmpty(data, "RSAUtils: verify data must not be null");
+        AssertUtils.isNotEmpty(signatureData, "RSAUtils: signature data must not be null");
+
+        try(ByteArrayInputStream inputStream = new ByteArrayInputStream(data)){
+            // signature
+            Signature signature = Signature.getInstance(ALGORITHM_SIGN);
+            signature.initVerify(key);
+
+            // buffer
+            byte[] buffer    = new byte[8192];
+            int    bytesRead = -1;
+
+            while((bytesRead = inputStream.read(buffer)) != -1){
+                signature.update(buffer, 0, bytesRead);
+            }
+
+            return signature.verify(signatureData);
         }catch(Exception e){
             throw new RSAException(e.getMessage(), e);
         }
